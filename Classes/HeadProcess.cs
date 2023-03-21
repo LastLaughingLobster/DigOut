@@ -21,7 +21,7 @@ public class HeadProcess{
             sandHandler.Process(x,y);
         } 
         if (element is Water) {
-            waterHandler.process(x,y);
+            waterHandler.process(x,y, (Water) element);
         } 
         if (element is Wood) {
             woodHandler.process(x,y);

@@ -62,6 +62,20 @@ public class TerrainMap
         }
     }
 
+    public void Swap(int x1, int y1, int x2, int y2)
+    {
+        try
+        {
+            Element temp = terrainMap[x1, y1];
+            terrainMap[x1, y1] = terrainMap[x2, y2];
+            terrainMap[x2, y2] = temp;
+        }
+        catch (IndexOutOfRangeException e)
+        {
+            throw new ArgumentOutOfRangeException("Parameter index is out of range.", e);
+        }
+    }
+
     public int convertFromTerrainMapToWorldPosX(int x){
         return -x + this.width / 2;
     }

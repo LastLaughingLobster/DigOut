@@ -220,7 +220,7 @@ public class World : Node2D
 
 			//botton-right
 			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x + 1;
+			cellPos.x = cellPos.x + 1; 
 			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
 			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
 			
