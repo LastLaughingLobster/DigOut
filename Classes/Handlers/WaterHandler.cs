@@ -24,6 +24,35 @@ public class WaterHandler : Handler
             return;
         }
 
+		bool downLeftSideClear = x + 1 < terrainMap.getWidth() && terrainMap.getTerrainMapPointByIndex(x + 1, y - 1).tileId == (int)Elements.Blank && y - 1 > 0;
+        bool downRightSideClear = x - 1 >= 0 && terrainMap.getTerrainMapPointByIndex(x - 1, y - 1).tileId == (int)Elements.Blank && y - 1 > 0;
+
+		if (downLeftSideClear && downRightSideClear)
+        {
+            if (((int)rnd.Next(0, 9)) < 5)
+            {
+                terrainMap.Swap(x, y, x + 1,  y - 1);
+                return;
+            }
+            else
+            {
+                terrainMap.Swap(x, y, x - 1, y - 1);
+                return;
+            }
+        }
+
+		if (!downLeftSideClear && downRightSideClear)
+        {
+            terrainMap.Swap(x, y, x - 1, y - 1);
+            return;
+        }
+
+        if (downLeftSideClear && !downRightSideClear)
+        {
+            terrainMap.Swap(x, y, x + 1,  y - 1);
+            return;
+        }
+
         Vector2 rightSideIndex = FindClearPositionRight(x, y, water.disperseRate);
         Vector2 leftSideIndex = FindClearPositionLeft(x, y, water.disperseRate);
 
@@ -31,9 +60,8 @@ public class WaterHandler : Handler
 		bool rightSideClear = !(rightSideIndex == Vector2.Zero);
 
         if (!leftSideClear && !rightSideClear)
-        {
             return;
-        }
+        
 
         if (leftSideClear && rightSideClear)
         {
@@ -68,11 +96,10 @@ public class WaterHandler : Handler
     {
         Vector2 output = Vector2.Zero;
         for (int i = 1; i <= dispersionRate; i++)
-        {
+		{
             if (!(x + i < terrainMap.getWidth() && terrainMap.getTerrainMapPointByIndex(x + i, y).tileId == (int)Elements.Blank))
-            {
                 break;
-            }
+            
             output.x = x + i;
             output.y = y;
         }
@@ -86,9 +113,8 @@ public class WaterHandler : Handler
         for (int i = 1; i <= dispersionRate; i++)
         {
             if (!(x - i >= 0 && terrainMap.getTerrainMapPointByIndex(x - i, y).tileId == (int)Elements.Blank))
-            {
                 break;
-            }
+
             output.x = x - i;
             output.y = y;
         }
