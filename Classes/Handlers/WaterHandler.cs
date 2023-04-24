@@ -5,6 +5,7 @@ public class WaterHandler : Handler
 {
     private TerrainMap terrainMap;
     private Random rnd;
+    private const float pressureThreshold = 0.1f;
 
     public WaterHandler(TerrainMap terrainMap, Random rnd)
     {
@@ -14,13 +15,14 @@ public class WaterHandler : Handler
 
     public void process(int x, int y, Water water)
     {
+
         bool downClear = (terrainMap.getTerrainMapPointByIndex(x, y - 1).tileId == (int)Elements.Blank)
                       && y - 1 > 0;
 
         //down
         if (downClear)
         {
-            terrainMap.Swap(x, y, x, y - 1);
+            MoveWithPressure(x, y, new Vector2(0, -1), water);
             return;
         }
 
@@ -31,27 +33,30 @@ public class WaterHandler : Handler
         {
             if (((int)rnd.Next(0, 9)) < 5)
             {
-                terrainMap.Swap(x, y, x + 1,  y - 1);
+                MoveWithPressure(x, y, new Vector2(-1,-1), water);
                 return;
             }
             else
             {
-                terrainMap.Swap(x, y, x - 1, y - 1);
+                MoveWithPressure(x, y, new Vector2(1,-1), water);
                 return;
             }
         }
 
 		if (!downLeftSideClear && downRightSideClear)
         {
-            terrainMap.Swap(x, y, x - 1, y - 1);
+            MoveWithPressure(x, y, new Vector2(-1,-1), water);
             return;
         }
 
         if (downLeftSideClear && !downRightSideClear)
         {
-            terrainMap.Swap(x, y, x + 1,  y - 1);
+            MoveWithPressure(x, y, new Vector2(1,-1), water);
             return;
         }
+
+        // if(water.pressure < pressureThreshold)
+        //     return;
 
         Vector2 rightSideIndex = FindClearPositionRight(x, y, water.disperseRate);
         Vector2 leftSideIndex = FindClearPositionLeft(x, y, water.disperseRate);
@@ -59,12 +64,12 @@ public class WaterHandler : Handler
 		bool leftSideClear = !(leftSideIndex == Vector2.Zero);
 		bool rightSideClear = !(rightSideIndex == Vector2.Zero);
 
+        // Check left and right
         if (!leftSideClear && !rightSideClear)
             return;
         
-
         if (leftSideClear && rightSideClear)
-        {
+        {   
             if (((int)rnd.Next(0, 9)) < 5)
             {
                 terrainMap.Swap(x, y, (int)rightSideIndex.x, (int)rightSideIndex.y);
@@ -88,6 +93,10 @@ public class WaterHandler : Handler
             terrainMap.Swap(x, y, (int)leftSideIndex.x, (int)leftSideIndex.y);
             return;
         }
+
+        Element top = terrainMap.getTerrainMapPointByIndex(x + 1, y);
+        if(top is Sand sand)
+            terrainMap.Swap(x,y,x + 1, y);
 
         return;
     }
@@ -121,4 +130,27 @@ public class WaterHandler : Handler
 
         return output;
     }
+
+    private void MoveWithPressure(int x, int y, Vector2 direction, Water water)
+    {
+        Element neighbor = terrainMap.getTerrainMapPointByIndex((int)(x + direction.x), (int)(y + direction.y));
+        if (neighbor.tileId == (int)Elements.Blank)
+        {   
+            water.pressure = water.pressure < pressureThreshold ? water.pressure : water.pressure / 2;
+            terrainMap.Swap(x, y, (int)(x + direction.x), (int)(y + direction.y));
+        }
+        else if (neighbor.tileId == (int)Elements.Water)
+        {
+            Water neighborWater = neighbor as Water;
+            float pressureDifference = water.pressure - neighborWater.pressure;
+            if (pressureDifference > pressureThreshold)
+            {
+                float pressureExchange = pressureDifference / 2;
+                water.pressure -= pressureExchange;
+                neighborWater.pressure += pressureExchange;
+                terrainMap.Swap(x, y, (int)(x + direction.x), (int)(y + direction.y));
+            }
+        }
+    }
+
 }

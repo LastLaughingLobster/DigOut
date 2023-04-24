@@ -3,7 +3,7 @@ using System;
 
 public class TerrainMap
 {
-    private Element[,] terrainMap;
+    private Element[] terrainMap;
 
     private int height;
 
@@ -12,68 +12,57 @@ public class TerrainMap
     public TerrainMap(int width, int height){
         this.height = height;
         this.width = width;
-        this.terrainMap = new Element[width, height];
+        this.terrainMap = new Element[width * height];
     }
 
     public void setTerrainMapDataValue(int x, int y, Element value){
-
-        try
-        {
-            this.terrainMap[x,y] = value;
-        }
-        catch (IndexOutOfRangeException e)
-        {
-            throw new ArgumentOutOfRangeException("Parameter index is out of range.", e);
-        }
+        if (isValidIndex(x, y))
+            this.terrainMap[linearIndex(x, y)] = value;
+        
     }
 
     public void setTerrainMapDataValueFromWorldPos(Vector2 cellPos, Element value){
-
-        try
-        {   
-            terrainMap[(int)(-cellPos.x + width /2), (int)(-cellPos.y + height / 2)] = value;
-            GD.Print(terrainMap);
-        }
-        catch (IndexOutOfRangeException e)
+        int x = (int)(-cellPos.x + width / 2);
+        int y = (int)(-cellPos.y + height / 2);
+        if (isValidIndex(x, y))
         {
-            throw new ArgumentOutOfRangeException("Parameter index is out of range.", e);
+            terrainMap[linearIndex(x, y)] = value;
         }
     }
 
     public Element getTerrainMapPointByIndex(int x, int y){
-        try
-        {
-            return this.terrainMap[x,y];
-        }
-        catch (IndexOutOfRangeException e)
-        {
-            throw new ArgumentOutOfRangeException("Parameter index is out of range.", e);
-        }
+        if (isValidIndex(x, y))
+            return this.terrainMap[linearIndex(x, y)];
+
+        return null;
     }
 
     public Element getTerrainMapPointByVector(Vector2 pos){
-        try
+        int x = (int)pos.x;
+        int y = (int)pos.y;
+        if (isValidIndex(x, y))
         {
-            return this.terrainMap[(int)pos.x, (int)pos.y];
+            return this.terrainMap[linearIndex(x, y)];
         }
-        catch (IndexOutOfRangeException e)
-        {
-            throw new ArgumentOutOfRangeException("Parameter index is out of range.", e);
-        }
+        return null;
     }
 
     public void Swap(int x1, int y1, int x2, int y2)
     {
-        try
+        if (isValidIndex(x1, y1) && isValidIndex(x2, y2))
         {
-            Element temp = terrainMap[x1, y1];
-            terrainMap[x1, y1] = terrainMap[x2, y2];
-            terrainMap[x2, y2] = temp;
+            Element temp = terrainMap[linearIndex(x1, y1)];
+            terrainMap[linearIndex(x1, y1)] = terrainMap[linearIndex(x2, y2)];
+            terrainMap[linearIndex(x2, y2)] = temp;
         }
-        catch (IndexOutOfRangeException e)
-        {
-            throw new ArgumentOutOfRangeException("Parameter index is out of range.", e);
-        }
+    }
+
+    public int linearIndex(int x, int y){
+        return x + y * width;
+    }
+
+    public bool isValidIndex(int x, int y){
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 
     public int convertFromTerrainMapToWorldPosX(int x){
@@ -91,6 +80,4 @@ public class TerrainMap
     public int getHeight(){
         return this.height;
     }
-
-
 }
