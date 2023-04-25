@@ -18,7 +18,7 @@ public class HeadProcess{
 
     public void Process(int x, int y, Element element){
         if (element is Sand) {
-            sandHandler.Process(x,y);
+            sandHandler.process(x,y);
         } 
         if (element is Water) {
             waterHandler.process(x,y, (Water) element);

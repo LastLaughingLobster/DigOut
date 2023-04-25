@@ -1,162 +1,173 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 
 public class World : Node2D
 {
-	// Declare member variables here. Examples:
-	// private int a = 2;
-	// private string b = "text";
-
 	[Export(PropertyHint.Range, "1,10,1")]
 	int numR;
 
 	[Export]
-	public Godot.TileMap pixelMap;
-	[Export]
-	public int SandTile, BlankTile, WaterTile, WoodTile;
-
-	[Export]
 	public Vector2 tMapSize;
 
+	[Export]
+	public Vector2 cellSize;
 
 	int width, height;
 	Random rnd;
 
 	Vector2[] BoundsInt;
 
-	//int[,] terrainMap;
-
 	public TerrainMap terrainMap;
 
 	public HeadProcess headProcess;
 
+	private Dictionary<Vector2, ColorRect> colorRects;
 
-	// Called when the node enters the scene tree for the first tllime.
+	Color sandColor = new Color(1, 1, 0);
+	Color waterColor = new Color(0, 0, 1);
+	Color woodColor = new Color(0.5f, 0.25f, 0);
+
+	Color black = new Color(0, 0, 0);
+
 	public override void _Ready()
 	{
-		//sets resolution
 		(GetNode("ViewportContainer/Viewport") as Viewport).Size = new Vector2(1280, 720);
+
+		colorRects = new Dictionary<Vector2, ColorRect>();
 
 		rnd = new Random();
 		BoundsInt = new Vector2[9];
-		pixelMap = GetChild(0) as Godot.TileMap;
-		
 		terrainMap = new TerrainMap((int)tMapSize.x, (int)tMapSize.y);
 		headProcess = new HeadProcess(terrainMap, rnd);
 		initPos();
-
 	}
 
-  // Called every frame. 'delta' is the elapsed time since the previous frame.
-  public override void _Process(float delta)
-  {
+	public override void _Process(float delta)
+	{
 		Vector2 mousePos = GetGlobalMousePosition();
+		Vector2 cellPos = WorldToCellPos(mousePos);
+		Vector2 terrainPos = TileMapToTerrainPos(cellPos);
+
 		if (Input.IsActionPressed("Mouse_left"))
 		{
-			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
-			
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-
+			terrainMap.setTerrainMapDataValueFromWorldPos(terrainPos, new Sand());
 		}
 
-		if(Input.IsActionPressed("Mouse_right"))
+		if (Input.IsActionPressed("Mouse_right"))
 		{
-			
-			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
-			
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
- 
+			terrainMap.setTerrainMapDataValueFromWorldPos(terrainPos, new Water());
 		}
+
 		if (Input.IsActionPressed("Mouse_middle"))
 		{
-			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
-			
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			
+			terrainMap.setTerrainMapDataValueFromWorldPos(terrainPos, new Wood());
 		}
-		
-	  	
-		Looper();
+
 		Renderer();
-  }
-
-	public void Renderer(){
-		
-		for (int y = 0; y < terrainMap.getHeight(); y++)
-		{
-			for (int x = 0; x < terrainMap.getWidth(); x++)
-			{
-				if (terrainMap.getTerrainMapPointByIndex(x,y).tileId == (int)Elements.Sand)
-				{
-					SetCellLogical(x,y,Elements.Sand);
-				}
-				else if(terrainMap.getTerrainMapPointByIndex(x,y).tileId == (int)Elements.Water)
-				{
-					SetCellLogical(x,y,Elements.Water);
-				}
-				else if(terrainMap.getTerrainMapPointByIndex(x,y).tileId == (int)Elements.Wood)
-				{
-					SetCellLogical(x,y,Elements.Wood);
-				}else
-				{
-					SetCellLogical(x,y,Elements.Blank);
-				}
-			}
-		}
+		Looper();
 	}
 
-	public void SetCellLogical(int x, int y, Elements element){
-		pixelMap.SetCell(-x + terrainMap.getWidth() / 2, -y + terrainMap.getHeight() / 2, (int)element);
-	}
-	
-	public void Looper(){
-		
-		for (int y = 1; y < terrainMap.getHeight(); y++)
-		{
-			for (int x = 0; x < terrainMap.getWidth(); x++)
-			{
-				headProcess.Process(x,y, terrainMap.getTerrainMapPointByIndex(x,y));
-			}
-		}
-	}
-	
-	
-
-	private  void initPos()
+	public void Renderer()
 	{
 		for (int y = 0; y < terrainMap.getHeight(); y++)
 		{
 			for (int x = 0; x < terrainMap.getWidth(); x++)
 			{
-				pixelMap.SetCell(-x + terrainMap.getWidth() / 2, -y + terrainMap.getHeight() / 2, (int)Elements.Blank);
-				terrainMap.setTerrainMapDataValue(x, y, new Blank());
+				Vector2 pos = new Vector2(x, y);
+				Element element = terrainMap.getTerrainMapPointByIndex(x, y);
+
+				if (element.tileId == (int)Elements.Sand)
+				{
+					SetColorRectColor(pos, sandColor);
+				}
+				else if (element.tileId == (int)Elements.Water)
+				{
+					SetColorRectColor(pos, waterColor);
+				}
+				else if (element.tileId == (int)Elements.Wood)
+				{
+					SetColorRectColor(pos, woodColor);
+				}
+				else
+				{
+					SetColorRectColor(pos, black);
+				}
 			}
-
 		}
-
 	}
 
+	public void Looper()
+	{
+		for (int y = terrainMap.getHeight(); y >= 1; y--)
+		{
+			for (int x = 0; x < terrainMap.getWidth(); x++)
+			{
+				headProcess.Process(x, y, terrainMap.getTerrainMapPointByIndex(x, y));
+			}
+		}
+	}
 
+	public void SetColorRectColor(Vector2 pos, Color color)
+	{
+		if (colorRects.ContainsKey(pos))
+		{
+			colorRects[pos].Color = color;
+		}
+	}
 
+	private void initPos()
+	{
+		for (int y = 0; y < terrainMap.getHeight(); y++)
+		{
+			for (int x = 0; x < terrainMap.getWidth(); x++)
+			{
+				Vector2 pos = new Vector2(x,y);
+				CreateColorRect(pos);
+				terrainMap.setTerrainMapDataValue(x, y, new Blank());
+				SetColorRectColor(pos, black);
+			}
+		}
+	}
+
+	private void CreateColorRect(Vector2 pos)
+	{
+		ColorRect colorRect = new ColorRect();
+		colorRect.RectMinSize = new Vector2();
+		colorRect.RectMinSize = new Vector2(cellSize.x, cellSize.y);
+		colorRect.RectPosition = pos * colorRect.RectMinSize;
+		colorRect.Color = Colors.Transparent;
+		AddChild(colorRect);
+		colorRects[pos] = colorRect;
+	}
 
 	public void clearMap(bool complete)
 	{
-		pixelMap.Clear();
-		
+		foreach (ColorRect colorRect in colorRects.Values)
+		{
+			colorRect.QueueFree();
+		}
+
+		colorRects.Clear();
+
 		if (complete)
 		{
 			terrainMap = null;
 		}
 	}
 
+	private Vector2 TerrainToTileMapPos(Vector2 terrainPos)
+	{
+		return new Vector2(-terrainPos.x + terrainMap.getWidth() / 2, -terrainPos.y + terrainMap.getHeight() / 2);
+	}
 
+	private Vector2 TileMapToTerrainPos(Vector2 tileMapPos)
+	{
+		return new Vector2(-tileMapPos.x + terrainMap.getWidth() / 2, -tileMapPos.y + terrainMap.getHeight() / 2);
+	}
+
+	private Vector2 WorldToCellPos(Vector2 worldPos)
+	{
+		return (worldPos / new Vector2(cellSize.x, cellSize.y)).Floor();
+	}
 }
