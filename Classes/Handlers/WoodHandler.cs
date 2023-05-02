@@ -1,7 +1,7 @@
 using System;
 using Godot;
 
-public class WoodHandler : Handler{
+public class WoodHandler : IHandler{
 
 	private TerrainMap terrainMap;
 	private Random rnd;
@@ -11,7 +11,7 @@ public class WoodHandler : Handler{
 		this.rnd = rnd;
 	}
 	
-	public void process(int x, int y) {
+	public void Process(int x, int y, Element wood, bool processState) {
 
 
 		//To burn in the future

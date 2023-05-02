@@ -10,13 +10,14 @@ public class World : Node2D
    [Export(PropertyHint.Range, "0,100,5")]
 	int iniChance;
 
-
 	[Export(PropertyHint.Range, "1,8,1")]
 	int birthLimit;
 
 	[Export(PropertyHint.Range, "1,8,1")]
 	int deathLimit;
 
+	[Export]
+	int BrushSize;
 
 	[Export(PropertyHint.Range, "1,10,1")]
 	int numR;
@@ -29,11 +30,18 @@ public class World : Node2D
 	[Export]
 	public Vector2 tMapSize;
 
+	[Export]
+	public float gravity;
+
+	[Export]
+	public float terminalVelocity;
 
 	int width, height;
 	Random rnd;
 
 	Vector2[] BoundsInt;
+
+	bool processState;
 
 	//int[,] terrainMap;
 
@@ -48,9 +56,10 @@ public class World : Node2D
 		rnd = new Random();
 		BoundsInt = new Vector2[9];
 		pixelMap = GetChild(0) as Godot.TileMap;
+		processState = true;
 		
 		terrainMap = new TerrainMap((int)tMapSize.x, (int)tMapSize.y);
-		headProcess = new HeadProcess(terrainMap, rnd);
+		headProcess = new HeadProcess(terrainMap, rnd, gravity, terminalVelocity);
 		initPos();
 
 		int j = 0;
@@ -67,173 +76,67 @@ public class World : Node2D
 
 	}
 
-  // Called every frame. 'delta' is the elapsed time since the previous frame.
-  public override void _Process(float delta)
-  {
+	// Called every frame. 'delta' is the elapsed time since the previous frame.
+	public override void _Process(float delta)
+	{
 		
 		if (Input.IsActionPressed("Mouse_left"))
 		{
 			Vector2 mousePos = GetGlobalMousePosition();
 			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
 			
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-
-			//left
-			cellPos.x = cellPos.x - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			cellPos.x = cellPos.x + 1;
-
-			//Right
-			cellPos.x = cellPos.x + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			cellPos.x = cellPos.x - 1;
-
-			//top 
-			cellPos.y = cellPos.y + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			cellPos.y = cellPos.y - 1;
-
-			//botton
-			cellPos.y = cellPos.y - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			cellPos.y = cellPos.y + 1;
-
-			//botton-left
-			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			cellPos.y = cellPos.y + 1;
-			cellPos.x = cellPos.x + 1;
-
-			//botton-right
-			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Sand());
-			pixelMap.SetCellv(cellPos, (int)Elements.Sand);
-			
-			
-
-			GD.Print("Mouse pos =", mousePos);
-			GD.Print("Cell pos = ", cellPos);
+			DrawSquare(cellPos, BrushSize, Elements.Sand);
 		}
 
 		if(Input.IsActionPressed("Mouse_right"))
 		{
-			
 			Vector2 mousePos = GetGlobalMousePosition();
 			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
 			
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-
-			//left
-			cellPos.x = cellPos.x - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			cellPos.x = cellPos.x + 1;
-
-			//Right
-			cellPos.x = cellPos.x + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			cellPos.x = cellPos.x - 1;
-
-			//top 
-			cellPos.y = cellPos.y + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			cellPos.y = cellPos.y - 1;
-
-			//botton
-			cellPos.y = cellPos.y - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			cellPos.y = cellPos.y + 1;
-
-			//botton-left
-			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			cellPos.y = cellPos.y + 1;
-			cellPos.x = cellPos.x + 1;
-
-			//botton-right
-			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Water());
-			pixelMap.SetCellv(cellPos, (int)Elements.Water);
-			
- 
+			DrawSquare(cellPos, BrushSize, Elements.Water);
 		}
+
 		if (Input.IsActionPressed("Mouse_middle"))
 		{
 			Vector2 mousePos = GetGlobalMousePosition();
 			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
 			
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-
-			//left
-			cellPos.x = cellPos.x - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			cellPos.x = cellPos.x + 1;
-
-			//Right
-			cellPos.x = cellPos.x + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			cellPos.x = cellPos.x - 1;
-
-			//top 
-			cellPos.y = cellPos.y + 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			cellPos.y = cellPos.y - 1;
-
-			//botton
-			cellPos.y = cellPos.y - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			cellPos.y = cellPos.y + 1;
-
-			//botton-left
-			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x - 1;
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			cellPos.y = cellPos.y + 1;
-			cellPos.x = cellPos.x + 1;
-
-			//botton-right
-			cellPos.y = cellPos.y - 1;
-			cellPos.x = cellPos.x + 1; 
-			terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, new Wood());
-			pixelMap.SetCellv(cellPos, (int)Elements.Wood);
-			
-			
-
-			GD.Print("Mouse pos =", mousePos);
-			GD.Print("Cell pos = ", cellPos);
+			DrawSquare(cellPos, BrushSize, Elements.Wood);
 		}
 		
 	  	
 		Looper();
 		Renderer();
-  }
+	}
+
+	public void DrawSquare(Vector2 pos, int size, Elements element)
+	{
+		for (int x = 0; x < size; x++)
+		{
+			for (int y = 0; y < size; y++)
+			{
+				Vector2 cellPos = new Vector2(pos.x + x, pos.y + y);
+				pixelMap.SetCellv(cellPos, (int)element);
+				terrainMap.setTerrainMapDataValueFromWorldPos(cellPos, GetTerrainElementFromElement(element));
+			}
+		}
+	}
+
+	public Element GetTerrainElementFromElement(Elements element)
+	{
+		switch (element)
+		{
+			case Elements.Sand:
+				return new Sand();
+			case Elements.Water:
+				return new Water();
+			case Elements.Wood:
+				return new Wood();
+			default:
+				return new Blank();
+		}
+	}
+
 
 	public void Renderer(){
 		
@@ -270,9 +173,11 @@ public class World : Node2D
 		{
 			for (int y = 1; y < terrainMap.getHeight(); y++)
 			{
-				headProcess.Process(x,y, terrainMap.getTerrainMapPointByIndex(x,y));
+				headProcess.Process(x,y, terrainMap.getTerrainMapPointByIndex(x,y), processState);
 			}
 		}
+
+		processState = !processState;
 	}
 	
 	

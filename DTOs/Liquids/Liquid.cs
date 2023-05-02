@@ -1,4 +1,4 @@
-public abstract class Liquid : Element{
+public abstract class Liquid : Movable{
     public int disperseRate;
     
 }

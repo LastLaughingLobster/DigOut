@@ -10,21 +10,21 @@ public class HeadProcess{
 
     private readonly WoodHandler woodHandler;
 
-    public HeadProcess (TerrainMap terrainMap, Random rnd){
-        sandHandler = new SandHandler(terrainMap, rnd);
-        waterHandler = new WaterHandler(terrainMap, rnd);
+    public HeadProcess (TerrainMap terrainMap, Random rnd, float gravity, float terminalVelocity){
+        sandHandler = new SandHandler(terrainMap, rnd, gravity, terminalVelocity);
+        waterHandler = new WaterHandler(terrainMap, rnd, gravity, terminalVelocity);
         woodHandler = new WoodHandler(terrainMap, rnd);
     }
 
-    public void Process(int x, int y, Element element){
+    public void Process(int x, int y, Element element, bool processState){
         if (element is Sand) {
-            sandHandler.Process(x,y);
+            sandHandler.Process(x,y, (Sand) element, processState);
         } 
         if (element is Water) {
-            waterHandler.process(x,y, (Water) element);
+            waterHandler.Process(x,y, (Water) element, processState);
         } 
         if (element is Wood) {
-            woodHandler.process(x,y);
+            woodHandler.Process(x,y, (Wood) element, processState);
         } 
     }
 

@@ -1,28 +1,52 @@
 using System;
 using Godot;
 
-public class WaterHandler : Handler
+public class WaterHandler : IHandler
 {
     private TerrainMap terrainMap;
     private Random rnd;
+    private float gravity;
+    private float terminalVelocity;
 
-    public WaterHandler(TerrainMap terrainMap, Random rnd)
+    public WaterHandler(TerrainMap terrainMap, Random rnd, float gravity, float terminalVelocity)
     {
         this.terrainMap = terrainMap;
         this.rnd = rnd;
+        this.gravity = gravity;
+        this.terminalVelocity = terminalVelocity;
     }
 
-    public void process(int x, int y, Water water)
+    public void Process(int x, int y, Element element, bool processState)
     {
-        bool downClear = (terrainMap.getTerrainMapPointByIndex(x, y - 1).tileId == (int)Elements.Blank)
-                      && y - 1 > 0;
+        Water water = (Water)element;
 
-        //down
-        if (downClear)
+        // Update the water's velocity based on the gravity factor
+        water.velocity.y += gravity;
+
+        // Limit the water's velocity to the terminal velocity
+        if (water.velocity.y > terminalVelocity)
         {
-            terrainMap.Swap(x, y, x, y - 1);
-            return;
+            water.velocity.y = terminalVelocity;
         }
+
+        // Calculate the new potential position based on the updated velocity
+        int newY = y - (int)Math.Round(water.velocity.y);
+
+        // Make sure the new position is within bounds and the element below is Blank
+        if (newY >= 0 && newY < terrainMap.getHeight())
+        {
+            Element belowElement = terrainMap.getTerrainMapPointByIndex(x, newY);
+            bool belowIsBlank = belowElement.tileId == (int)Elements.Blank;
+
+            if (belowIsBlank)
+            {
+                terrainMap.Swap(x, y, x, newY);
+                return;
+            }
+        }
+
+        // Reset the velocity if water cannot move downwards
+        water.velocity.y = 0;
 
 		bool downLeftSideClear = x + 1 < terrainMap.getWidth() && terrainMap.getTerrainMapPointByIndex(x + 1, y - 1).tileId == (int)Elements.Blank && y - 1 > 0;
         bool downRightSideClear = x - 1 >= 0 && terrainMap.getTerrainMapPointByIndex(x - 1, y - 1).tileId == (int)Elements.Blank && y - 1 > 0;
