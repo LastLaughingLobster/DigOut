@@ -6,12 +6,15 @@ public class HeadProcess{
     
     private readonly SandHandler sandHandler;
 
+    private readonly SaltHandler saltHandler;
+
     private readonly WaterHandler waterHandler;
 
     private readonly WoodHandler woodHandler;
 
     public HeadProcess (TerrainMap terrainMap, Random rnd, float gravity, float terminalVelocity){
         sandHandler = new SandHandler(terrainMap, rnd, gravity, terminalVelocity);
+        saltHandler = new SaltHandler(terrainMap, rnd, gravity, terminalVelocity);
         waterHandler = new WaterHandler(terrainMap, rnd, gravity, terminalVelocity);
         woodHandler = new WoodHandler(terrainMap, rnd);
     }
@@ -25,6 +28,9 @@ public class HeadProcess{
         } 
         if (element is Wood) {
             woodHandler.Process(x,y, (Wood) element, processState);
+        } 
+        if (element is Salt) {
+            saltHandler.Process(x,y, (Salt) element, processState);
         } 
     }
 

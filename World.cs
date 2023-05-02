@@ -7,15 +7,6 @@ public class World : Node2D
 	// private int a = 2;
 	// private string b = "text";
 
-   [Export(PropertyHint.Range, "0,100,5")]
-	int iniChance;
-
-	[Export(PropertyHint.Range, "1,8,1")]
-	int birthLimit;
-
-	[Export(PropertyHint.Range, "1,8,1")]
-	int deathLimit;
-
 	[Export]
 	int BrushSize;
 
@@ -24,8 +15,6 @@ public class World : Node2D
 
 	[Export]
 	public Godot.TileMap pixelMap;
-	[Export]
-	public int SandTile, BlankTile, WaterTile, WoodTile;
 
 	[Export]
 	public Vector2 tMapSize;
@@ -85,7 +74,7 @@ public class World : Node2D
 			Vector2 mousePos = GetGlobalMousePosition();
 			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
 			
-			DrawSquare(cellPos, BrushSize, Elements.Sand);
+			DrawSquare(cellPos, BrushSize, Elements.Water);
 		}
 
 		if(Input.IsActionPressed("Mouse_right"))
@@ -93,7 +82,15 @@ public class World : Node2D
 			Vector2 mousePos = GetGlobalMousePosition();
 			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
 			
-			DrawSquare(cellPos, BrushSize, Elements.Water);
+			DrawSquare(cellPos, BrushSize, Elements.Salt);
+		}
+
+		if(Input.IsActionPressed("sand_button"))
+		{
+			Vector2 mousePos = GetGlobalMousePosition();
+			Vector2 cellPos = pixelMap.WorldToMap(mousePos);
+			
+			DrawSquare(cellPos, BrushSize, Elements.Sand);
 		}
 
 		if (Input.IsActionPressed("Mouse_middle"))
@@ -132,6 +129,8 @@ public class World : Node2D
 				return new Water();
 			case Elements.Wood:
 				return new Wood();
+			case Elements.Salt:
+				return new Salt();
 			default:
 				return new Blank();
 		}
@@ -155,6 +154,10 @@ public class World : Node2D
 				else if(terrainMap.getTerrainMapPointByIndex(x,y).tileId == (int)Elements.Wood)
 				{
 					SetCellLogical(x,y,Elements.Wood);
+				}
+				else if(terrainMap.getTerrainMapPointByIndex(x,y).tileId == (int)Elements.Salt)
+				{
+					SetCellLogical(x,y,Elements.Salt);
 				}else
 				{
 					SetCellLogical(x,y,Elements.Blank);
@@ -179,8 +182,6 @@ public class World : Node2D
 
 		processState = !processState;
 	}
-	
-	
 
 	private  void initPos()
 	{
@@ -195,9 +196,6 @@ public class World : Node2D
 		}
 
 	}
-
-
-
 
 	public void clearMap(bool complete)
 	{

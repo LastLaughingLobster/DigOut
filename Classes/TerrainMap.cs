@@ -32,7 +32,6 @@ public class TerrainMap
         try
         {   
             terrainMap[(int)(-cellPos.x + width /2), (int)(-cellPos.y + height / 2)] = value;
-            GD.Print(terrainMap);
         }
         catch (IndexOutOfRangeException e)
         {
